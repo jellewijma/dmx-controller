@@ -1,10 +1,10 @@
 
 import sys
 import os
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QSlider, QVBoxLayout, QHBoxLayout, QLabel, QAction, QFileDialog, QTabWidget, QPushButton
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QSlider, QVBoxLayout, QHBoxLayout, QLabel, QAction, QFileDialog, QTabWidget, QPushButton, QComboBox
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor
-from src.dmx_output import send_dmx
+from src.dmx_output import send_dmx, get_dmx_devices, is_device_active
 from src.show_file import save_show, load_show
 from src.patch_window import PatchWindow
 
@@ -88,6 +88,21 @@ class DMXControl(QMainWindow):
         load_button.clicked.connect(self.load_action)
         session_layout.addWidget(load_button)
 
+        # DMX Device Selection
+        dmx_device_layout = QHBoxLayout()
+        self.dmx_device_combo = QComboBox()
+        self.populate_dmx_devices()
+        dmx_device_layout.addWidget(QLabel("DMX Device:"))
+        dmx_device_layout.addWidget(self.dmx_device_combo)
+        session_layout.addLayout(dmx_device_layout)
+
+        self.check_device_button = QPushButton("Check Device Status")
+        self.check_device_button.clicked.connect(self.check_selected_dmx_device)
+        session_layout.addWidget(self.check_device_button)
+
+        self.device_status_label = QLabel("Status: Unknown")
+        session_layout.addWidget(self.device_status_label)
+
         self.tab_widget.addTab(session_widget, "Session")
 
         # Open Patch Manager tab by default
@@ -151,6 +166,25 @@ class DMXControl(QMainWindow):
 
     def open_patch_window(self):
         self.tab_widget.setCurrentWidget(self.patch_window)
+
+    def populate_dmx_devices(self):
+        self.dmx_device_combo.clear()
+        devices = get_dmx_devices()
+        if devices:
+            self.dmx_device_combo.addItems(devices)
+        else:
+            self.dmx_device_combo.addItem("No DMX devices found")
+
+    def check_selected_dmx_device(self):
+        selected_device = self.dmx_device_combo.currentText()
+        if selected_device == "No DMX devices found":
+            self.device_status_label.setText("Status: No device selected")
+            return
+
+        if is_device_active(selected_device):
+            self.device_status_label.setText(f"Status: {selected_device} is Active")
+        else:
+            self.device_status_label.setText(f"Status: {selected_device} is Inactive/Error")
 
 def create_gui(patch_manager, fixture_library, initial_dmx_frame, initial_patched_fixtures):
     app = QApplication(sys.argv)
