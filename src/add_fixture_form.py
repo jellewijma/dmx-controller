@@ -44,7 +44,47 @@ class AddFixtureForm(QWidget):
 
         self.populate_manufacturers()
         self.manufacturer_combo.currentTextChanged.connect(self.populate_models)
+        self.model_combo.currentTextChanged.connect(self._update_suggested_address) # Connect model change
+        self.universe_spinbox.valueChanged.connect(self._update_suggested_address) # Connect universe change
         self.populate_models(self.manufacturer_combo.currentText()) # Initial population
+        self._update_suggested_address() # Set initial suggested address
+
+    def _find_next_free_address(self, universe, num_channels):
+        if universe not in self.patch_manager.patched_fixtures:
+            return 1 # If universe is empty, address 1 is free
+
+        occupied_ranges = []
+        for patch_info in self.patch_manager.patched_fixtures[universe]:
+            existing_fixture = patch_info['fixture']
+            existing_address = patch_info['address']
+            existing_mode = existing_fixture['modes'][0] # Assuming first mode
+            existing_num_channels = len(existing_mode['channels'])
+            occupied_ranges.append((existing_address, existing_address + existing_num_channels - 1))
+
+        occupied_ranges.sort()
+
+        # Find the first gap
+        current_address = 1
+        for start, end in occupied_ranges:
+            if current_address + num_channels - 1 < start:
+                return current_address
+            current_address = end + 1
+        
+        return current_address # If no gap, return the next address after all existing fixtures
+
+    def _update_suggested_address(self):
+        manufacturer = self.manufacturer_combo.currentText()
+        model = self.model_combo.currentText()
+        universe = self.universe_spinbox.value()
+
+        fixture = self.fixture_library.get_fixture(manufacturer, model)
+        if fixture:
+            mode = fixture['modes'][0]
+            num_channels = len(mode['channels'])
+            next_free_address = self._find_next_free_address(universe, num_channels)
+            self.address_spinbox.setValue(next_free_address)
+        else:
+            self.address_spinbox.setValue(1) # Default to 1 if fixture not found
 
     def populate_manufacturers(self):
         manufacturers = sorted(list(set(f['manufacturer'] for f in self.fixture_library.fixtures)))
@@ -65,5 +105,6 @@ class AddFixtureForm(QWidget):
         fixture = self.fixture_library.get_fixture(manufacturer, model)
         if fixture:
             self.fixture_added.emit(fixture, universe, address, fixture_id) # Emit ID
+            self.id_spinbox.setValue(self.patch_manager._next_fixture_id) # Update ID spinbox
         else:
             print(f"Error: Fixture {manufacturer} {model} not found in library.")

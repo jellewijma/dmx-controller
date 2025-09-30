@@ -33,6 +33,25 @@ class PatchManager:
 
         # Assuming the first mode is the one to be used
         mode = fixture['modes'][0]
+        num_channels = len(mode['channels'])
+
+        # Check for address conflicts
+        for existing_patch_info in self.patched_fixtures[universe]:
+            existing_fixture = existing_patch_info['fixture']
+            existing_address = existing_patch_info['address']
+            existing_mode = existing_fixture['modes'][0] # Assuming first mode
+            existing_num_channels = len(existing_mode['channels'])
+
+            # Calculate ranges
+            new_fixture_start = address
+            new_fixture_end = address + num_channels - 1
+            existing_fixture_start = existing_address
+            existing_fixture_end = existing_address + existing_num_channels - 1
+
+            # Check for overlap
+            if max(new_fixture_start, existing_fixture_start) <= min(new_fixture_end, existing_fixture_end):
+                raise ValueError(f"Address conflict: Fixture at {address} (channels {num_channels}) overlaps with existing fixture at {existing_address} (channels {existing_num_channels}) in universe {universe}.")
+
         for i, channel_name in enumerate(mode['channels']):
             patch_info['channel_map'][channel_name] = i
 

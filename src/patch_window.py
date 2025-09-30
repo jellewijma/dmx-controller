@@ -63,6 +63,7 @@ class PatchWindow(QWidget):
                 self.table.setItem(row_position, 5, QTableWidgetItem(patch_info['fixture']['modes'][0]['name']))
 
     def show_add_fixture_form(self):
+        self.add_fixture_form._update_suggested_address() # Update suggested address when showing the form
         self.stacked_widget.setCurrentWidget(self.add_fixture_form)
 
     def show_table_page(self):
@@ -83,9 +84,9 @@ class PatchWindow(QWidget):
                 item = self.table.item(row, 0) # ID is in the first column
                 if item and int(item.text()) == search_id:
                     self.table.selectRow(row)
-                    print(f"Found fixture with ID {search_id} at row {row}")
                     return
-            print(f"Fixture with ID {search_id} found in manager but not in table (should not happen).")
+            # This case should ideally not be reached if populate_table is consistent
+            # with patch_manager's state.
+            print(f"Warning: Fixture with ID {search_id} found in manager but not visually in table.")
         else:
-            print(f"Fixture with ID {search_id} not found.")
             self.table.clearSelection()
