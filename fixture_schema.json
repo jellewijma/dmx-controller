@@ -1,0 +1,60 @@
+
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "DMX Fixture Definition",
+    "description": "A schema for defining DMX lighting fixtures.",
+    "type": "object",
+    "properties": {
+        "manufacturer": {
+            "description": "The manufacturer of the fixture.",
+            "type": "string"
+        },
+        "model": {
+            "description": "The model name of the fixture.",
+            "type": "string"
+        },
+        "modes": {
+            "description": "A list of the fixture's operating modes.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "description": "The name of the mode (e.g., '8-channel', '16-channel').",
+                        "type": "string"
+                    },
+                    "channels": {
+                        "description": "An ordered list of channel functions for this mode.",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": ["name", "channels"]
+            }
+        },
+        "channels": {
+            "description": "A dictionary of all possible channel functions for this fixture.",
+            "type": "object",
+            "patternProperties": {
+                "^[a-zA-Z0-9_]+$": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "description": "The descriptive name of the channel function.",
+                            "type": "string"
+                        },
+                        "type": {
+                            "description": "The type of the channel.",
+                            "type": "string",
+                            "enum": ["dimmer", "strobe", "color", "pan", "tilt", "gobo", "focus", "zoom", "other"]
+                        }
+                    },
+                    "required": ["name", "type"]
+                }
+            }
+        }
+    },
+    "required": ["manufacturer", "model", "modes", "channels"]
+}

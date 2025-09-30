@@ -1,0 +1,93 @@
+{
+    "manufacturer": "Robe",
+    "model": "Pointe",
+    "modes": [
+        {
+            "name": "16-channel",
+            "channels": [
+                "pan",
+                "tilt",
+                "speed",
+                "dimmer",
+                "strobe",
+                "color_wheel",
+                "gobo_wheel",
+                "gobo_rotation",
+                "prism",
+                "prism_rotation",
+                "focus",
+                "zoom",
+                "frost",
+                "reset",
+                "lamp_control",
+                "extra"
+            ]
+        }
+    ],
+    "channels": {
+        "pan": {
+            "name": "Pan",
+            "type": "pan"
+        },
+        "tilt": {
+            "name": "Tilt",
+            "type": "tilt"
+        },
+        "speed": {
+            "name": "Pan/Tilt Speed",
+            "type": "other"
+        },
+        "dimmer": {
+            "name": "Dimmer",
+            "type": "dimmer"
+        },
+        "strobe": {
+            "name": "Strobe",
+            "type": "strobe"
+        },
+        "color_wheel": {
+            "name": "Color Wheel",
+            "type": "color"
+        },
+        "gobo_wheel": {
+            "name": "Gobo Wheel",
+            "type": "gobo"
+        },
+        "gobo_rotation": {
+            "name": "Gobo Rotation",
+            "type": "gobo"
+        },
+        "prism": {
+            "name": "Prism",
+            "type": "other"
+        },
+        "prism_rotation": {
+            "name": "Prism Rotation",
+            "type": "other"
+        },
+        "focus": {
+            "name": "Focus",
+            "type": "focus"
+        },
+        "zoom": {
+            "name": "Zoom",
+            "type": "zoom"
+        },
+        "frost": {
+            "name": "Frost",
+            "type": "other"
+        },
+        "reset": {
+            "name": "Reset",
+            "type": "other"
+        },
+        "lamp_control": {
+            "name": "Lamp Control",
+            "type": "other"
+        },
+        "extra": {
+            "name": "Extra Functions",
+            "type": "other"
+        }
+    }
+}

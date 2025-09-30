@@ -1,1 +1,5 @@
 .venv/
+dmx_channels.json
+show1
+show1.json
+src/__pycache__/
