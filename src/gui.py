@@ -1,5 +1,6 @@
 
 import sys
+import os
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QSlider, QVBoxLayout, QHBoxLayout, QLabel, QAction, QFileDialog, QTabWidget, QPushButton
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor
@@ -7,21 +8,35 @@ from src.dmx_output import send_dmx
 from src.show_file import save_show, load_show
 from src.patch_window import PatchWindow
 
+
+
 class DMXControl(QMainWindow):
-    def __init__(self, patch_manager, fixture_library):
+    def __init__(self, patch_manager, fixture_library, initial_dmx_frame, initial_patched_fixtures):
         super().__init__()
         self.patch_manager = patch_manager
         self.fixture_library = fixture_library
-        self.dmx_frame = [0] * 512
+        self.dmx_frame = initial_dmx_frame
         self.patch_window = None
+        self.current_show_file = None # To track the currently loaded/saved file
         self.initUI()
+        self.update_sliders()
+        self._apply_initial_patch(initial_patched_fixtures)
+
+    def _apply_initial_patch(self, initial_patched_fixtures):
+        self.patch_manager.clear_patch()
+        for universe, fixtures_data in initial_patched_fixtures.items():
+            for patch_info in fixtures_data:
+                fixture = self.fixture_library.get_fixture(patch_info['manufacturer'], patch_info['model'])
+                if fixture:
+                    self.patch_manager.add_fixture(fixture, int(universe), patch_info['address'], patch_info['id'])
+        if self.patch_window:
+            self.patch_window.populate_table()
 
     def initUI(self):
         self.setWindowTitle('DMX Controller')
 
         # Create menu bar
         menubar = self.menuBar()
-        # Removed File menu, as save/load will be in a tab
         patch_menu = menubar.addMenu('Patch')
 
         manage_patch_action = QAction('Manage Patch', self)
@@ -65,6 +80,10 @@ class DMXControl(QMainWindow):
         save_button.clicked.connect(self.save_action)
         session_layout.addWidget(save_button)
 
+        save_as_button = QPushButton("Save Show As...")
+        save_as_button.clicked.connect(self.save_as_action)
+        session_layout.addWidget(save_as_button)
+
         load_button = QPushButton("Load Show")
         load_button.clicked.connect(self.load_action)
         session_layout.addWidget(load_button)
@@ -87,6 +106,13 @@ class DMXControl(QMainWindow):
         send_dmx(self.dmx_frame)
 
     def save_action(self):
+        if self.current_show_file:
+            save_show(self.current_show_file, self.dmx_frame, self.patch_manager)
+            print(f"Show saved to {self.current_show_file}")
+        else:
+            self.save_as_action()
+
+    def save_as_action(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getSaveFileName(self,"Save Show File","","JSON Files (*.json);;All Files (*)", options=options)
@@ -94,6 +120,7 @@ class DMXControl(QMainWindow):
             if not fileName.endswith(".json"):
                 fileName += ".json"
             save_show(fileName, self.dmx_frame, self.patch_manager)
+            self.current_show_file = fileName
             print(f"Show saved to {fileName}")
 
     def load_action(self):
@@ -107,7 +134,6 @@ class DMXControl(QMainWindow):
             self.patch_manager.clear_patch()
             for universe, fixtures_data in loaded_patched_fixtures_data.items():
                 for patch_info in fixtures_data:
-                    # Directly use the fixture object from patch_info
                     fixture = patch_info['fixture']
                     if fixture:
                         self.patch_manager.add_fixture(fixture, int(universe), patch_info['address'])
@@ -116,6 +142,7 @@ class DMXControl(QMainWindow):
             send_dmx(self.dmx_frame)
             if self.patch_window:
                 self.patch_window.populate_table()
+            self.current_show_file = fileName
             print(f"Show loaded from {fileName}")
 
     def update_sliders(self):
@@ -123,10 +150,9 @@ class DMXControl(QMainWindow):
             slider.setValue(self.dmx_frame[i])
 
     def open_patch_window(self):
-        # Patch window is now always created and added as a tab
         self.tab_widget.setCurrentWidget(self.patch_window)
 
-def create_gui(patch_manager, fixture_library):
+def create_gui(patch_manager, fixture_library, initial_dmx_frame, initial_patched_fixtures):
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
 
@@ -146,6 +172,10 @@ def create_gui(patch_manager, fixture_library):
     dark_palette.setColor(QPalette.HighlightedText, QColor(0, 0, 0))
     app.setPalette(dark_palette)
 
-    ex = DMXControl(patch_manager, fixture_library)
+    ex = DMXControl(patch_manager, fixture_library, initial_dmx_frame, initial_patched_fixtures)
     ex.show()
     sys.exit(app.exec_())
+
+
+
+

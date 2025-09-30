@@ -1,14 +1,15 @@
 
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QComboBox, QSpinBox, QDialogButtonBox, QFormLayout, QPushButton
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QComboBox, QSpinBox, QDialogButtonBox, QFormLayout, QPushButton, QLabel
 from PyQt5.QtCore import pyqtSignal, Qt
 
 class AddFixtureForm(QWidget):
-    fixture_added = pyqtSignal(object, int, int) # fixture, universe, address
+    fixture_added = pyqtSignal(object, int, int, int) # fixture, universe, address, id
     cancelled = pyqtSignal()
 
-    def __init__(self, fixture_library, parent=None):
+    def __init__(self, fixture_library, patch_manager, parent=None): # Added patch_manager
         super().__init__(parent)
         self.fixture_library = fixture_library
+        self.patch_manager = patch_manager # Stored patch_manager
 
         self.layout = QVBoxLayout(self)
 
@@ -20,11 +21,16 @@ class AddFixtureForm(QWidget):
         self.address_spinbox = QSpinBox()
         self.address_spinbox.setMinimum(1)
         self.address_spinbox.setMaximum(512)
+        self.id_spinbox = QSpinBox() # New ID spinbox
+        self.id_spinbox.setMinimum(1)
+        self.id_spinbox.setMaximum(999) # Arbitrary max ID
+        self.id_spinbox.setValue(self.patch_manager._next_fixture_id) # Set initial ID
 
         self.form_layout.addRow("Manufacturer:", self.manufacturer_combo)
         self.form_layout.addRow("Model:", self.model_combo)
         self.form_layout.addRow("Universe:", self.universe_spinbox)
         self.form_layout.addRow("Address:", self.address_spinbox)
+        self.form_layout.addRow("ID:", self.id_spinbox) # Add ID to form
 
         self.layout.addLayout(self.form_layout)
 
@@ -54,9 +60,10 @@ class AddFixtureForm(QWidget):
         model = self.model_combo.currentText()
         universe = self.universe_spinbox.value()
         address = self.address_spinbox.value()
+        fixture_id = self.id_spinbox.value() # Get ID
 
         fixture = self.fixture_library.get_fixture(manufacturer, model)
         if fixture:
-            self.fixture_added.emit(fixture, universe, address)
+            self.fixture_added.emit(fixture, universe, address, fixture_id) # Emit ID
         else:
             print(f"Error: Fixture {manufacturer} {model} not found in library.")

@@ -5,13 +5,27 @@ class PatchManager:
     def __init__(self):
         self.patched_fixtures = {}
         self.dmx_frames = {}
+        self._next_fixture_id = 1 # Initialize fixture ID counter
 
-    def add_fixture(self, fixture, universe, address):
+    def add_fixture(self, fixture, universe, address, fixture_id=None):
         if universe not in self.patched_fixtures:
             self.patched_fixtures[universe] = []
             self.dmx_frames[universe] = [0] * 512
 
+        if fixture_id is None:
+            fixture_id = self._next_fixture_id
+            self._next_fixture_id += 1
+        else:
+            # Ensure manually provided ID is unique and update counter if necessary
+            for uni_fixtures in self.patched_fixtures.values():
+                for pf in uni_fixtures:
+                    if pf.get('id') == fixture_id:
+                        raise ValueError(f"Fixture ID {fixture_id} already exists.")
+            if fixture_id >= self._next_fixture_id:
+                self._next_fixture_id = fixture_id + 1
+
         patch_info = {
+            'id': fixture_id,
             'fixture': fixture,
             'address': address,
             'channel_map': {},
@@ -40,10 +54,17 @@ class PatchManager:
     def get_dmx_frame(self, universe):
         return self.dmx_frames.get(universe, [0] * 512)
 
+    def get_fixture_by_id(self, fixture_id):
+        for universe, fixtures in self.patched_fixtures.items():
+            for patch_info in fixtures:
+                if patch_info.get('id') == fixture_id:
+                    return patch_info
+        return None
+
     def clear_patch(self):
         self.patched_fixtures = {}
         self.dmx_frames = {}
-
+        self._next_fixture_id = 1 # Reset ID counter on clear
 # Example Usage:
 if __name__ == '__main__':
     dummy_fixture = {

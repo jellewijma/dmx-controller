@@ -8,6 +8,7 @@ def save_show(filename, dmx_frame, patch_manager):
         serializable_patch[universe] = []
         for patch_info in fixtures:
             serializable_patch[universe].append({
+                'id': patch_info['id'],
                 'manufacturer': patch_info['fixture']['manufacturer'],
                 'model': patch_info['fixture']['model'],
                 'address': patch_info['address'],
@@ -37,6 +38,7 @@ def load_show(filename, fixture_library):
                     fixture = fixture_library.get_fixture(patch_data['manufacturer'], patch_data['model'])
                     if fixture:
                         patch_info = {
+                            'id': patch_data['id'],
                             'fixture': fixture,
                             'address': patch_data['address'],
                             'channel_map': {},
