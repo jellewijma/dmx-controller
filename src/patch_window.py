@@ -1,6 +1,7 @@
 
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QHeaderView, QDialog
-from src.add_fixture_dialog import AddFixtureDialog
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QHeaderView, QStackedWidget, QFormLayout, QComboBox, QSpinBox
+from PyQt5.QtCore import Qt
+from src.add_fixture_form import AddFixtureForm
 
 class PatchWindow(QWidget):
     def __init__(self, patch_manager, fixture_library):
@@ -8,17 +9,31 @@ class PatchWindow(QWidget):
         self.patch_manager = patch_manager
         self.fixture_library = fixture_library
 
-        self.layout = QVBoxLayout(self)
+        self.main_layout = QVBoxLayout(self)
+        self.stacked_widget = QStackedWidget()
+        self.main_layout.addWidget(self.stacked_widget)
+
+        # Page 1: Patched Fixtures Table
+        self.table_page = QWidget()
+        self.table_page_layout = QVBoxLayout(self.table_page)
 
         self.table = QTableWidget()
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(["Manufacturer", "Model", "Universe", "Address", "Mode"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.layout.addWidget(self.table)
+        self.table_page_layout.addWidget(self.table)
 
         self.add_button = QPushButton("Add Fixture")
-        self.add_button.clicked.connect(self.open_add_fixture_dialog)
-        self.layout.addWidget(self.add_button)
+        self.add_button.clicked.connect(self.show_add_fixture_form)
+        self.table_page_layout.addWidget(self.add_button)
+
+        self.stacked_widget.addWidget(self.table_page)
+
+        # Page 2: Add Fixture Form
+        self.add_fixture_form = AddFixtureForm(self.fixture_library)
+        self.add_fixture_form.fixture_added.connect(self.handle_fixture_added)
+        self.add_fixture_form.cancelled.connect(self.show_table_page)
+        self.stacked_widget.addWidget(self.add_fixture_form)
 
         self.populate_table()
 
@@ -34,10 +49,14 @@ class PatchWindow(QWidget):
                 self.table.setItem(row_position, 3, QTableWidgetItem(str(patch_info['address'])))
                 self.table.setItem(row_position, 4, QTableWidgetItem(patch_info['fixture']['modes'][0]['name']))
 
-    def open_add_fixture_dialog(self):
-        dialog = AddFixtureDialog(self.fixture_library, self)
-        if dialog.exec_() == QDialog.Accepted:
-            fixture, universe, address = dialog.get_selection()
-            if fixture:
-                self.patch_manager.add_fixture(fixture, universe, address)
-                self.populate_table()
+    def show_add_fixture_form(self):
+        self.stacked_widget.setCurrentWidget(self.add_fixture_form)
+
+    def show_table_page(self):
+        self.stacked_widget.setCurrentWidget(self.table_page)
+
+    def handle_fixture_added(self, fixture, universe, address):
+        self.patch_manager.add_fixture(fixture, universe, address)
+        self.populate_table()
+        print(f"Added fixture: {fixture['manufacturer']} {fixture['model']} at U{universe} A{address}")
+        self.show_table_page()

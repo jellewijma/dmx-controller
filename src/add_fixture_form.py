@@ -1,12 +1,15 @@
 
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QComboBox, QSpinBox, QDialogButtonBox, QFormLayout
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QComboBox, QSpinBox, QDialogButtonBox, QFormLayout, QPushButton
+from PyQt5.QtCore import pyqtSignal, Qt
 
-class AddFixtureDialog(QDialog):
+class AddFixtureForm(QWidget):
+    fixture_added = pyqtSignal(object, int, int) # fixture, universe, address
+    cancelled = pyqtSignal()
+
     def __init__(self, fixture_library, parent=None):
         super().__init__(parent)
         self.fixture_library = fixture_library
 
-        self.setWindowTitle("Add Fixture")
         self.layout = QVBoxLayout(self)
 
         self.form_layout = QFormLayout()
@@ -25,14 +28,17 @@ class AddFixtureDialog(QDialog):
 
         self.layout.addLayout(self.form_layout)
 
-        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        self.button_box.accepted.connect(self.accept)
-        self.button_box.rejected.connect(self.reject)
-        self.layout.addWidget(self.button_box)
+        self.add_button = QPushButton("Add Fixture")
+        self.add_button.clicked.connect(self._add_fixture)
+        self.layout.addWidget(self.add_button)
+
+        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button.clicked.connect(self.cancelled.emit)
+        self.layout.addWidget(self.cancel_button)
 
         self.populate_manufacturers()
-        self.populate_models(self.manufacturer_combo.currentText()) # Initial population
         self.manufacturer_combo.currentTextChanged.connect(self.populate_models)
+        self.populate_models(self.manufacturer_combo.currentText()) # Initial population
 
     def populate_manufacturers(self):
         manufacturers = sorted(list(set(f['manufacturer'] for f in self.fixture_library.fixtures)))
@@ -43,10 +49,14 @@ class AddFixtureDialog(QDialog):
         models = sorted([f['model'] for f in self.fixture_library.fixtures if f['manufacturer'] == manufacturer])
         self.model_combo.addItems(models)
 
-    def get_selection(self):
+    def _add_fixture(self):
         manufacturer = self.manufacturer_combo.currentText()
         model = self.model_combo.currentText()
-        fixture = self.fixture_library.get_fixture(manufacturer, model)
         universe = self.universe_spinbox.value()
         address = self.address_spinbox.value()
-        return fixture, universe, address
+
+        fixture = self.fixture_library.get_fixture(manufacturer, model)
+        if fixture:
+            self.fixture_added.emit(fixture, universe, address)
+        else:
+            print(f"Error: Fixture {manufacturer} {model} not found in library.")

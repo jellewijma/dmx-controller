@@ -1,6 +1,6 @@
 
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QSlider, QVBoxLayout, QHBoxLayout, QLabel, QAction, QFileDialog, QTabWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QSlider, QVBoxLayout, QHBoxLayout, QLabel, QAction, QFileDialog, QTabWidget, QPushButton
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor
 from src.dmx_output import send_dmx
@@ -21,16 +21,8 @@ class DMXControl(QMainWindow):
 
         # Create menu bar
         menubar = self.menuBar()
-        file_menu = menubar.addMenu('File')
+        # Removed File menu, as save/load will be in a tab
         patch_menu = menubar.addMenu('Patch')
-
-        save_action = QAction('Save Show', self)
-        save_action.triggered.connect(self.save_action)
-        file_menu.addAction(save_action)
-
-        load_action = QAction('Load Show', self)
-        load_action.triggered.connect(self.load_action)
-        file_menu.addAction(load_action)
 
         manage_patch_action = QAction('Manage Patch', self)
         manage_patch_action.triggered.connect(self.open_patch_window)
@@ -64,6 +56,25 @@ class DMXControl(QMainWindow):
             dmx_control_layout.addLayout(slider_layout)
         
         self.tab_widget.addTab(dmx_control_widget, "DMX Control")
+
+        # Create Session tab
+        session_widget = QWidget()
+        session_layout = QVBoxLayout(session_widget)
+
+        save_button = QPushButton("Save Show")
+        save_button.clicked.connect(self.save_action)
+        session_layout.addWidget(save_button)
+
+        load_button = QPushButton("Load Show")
+        load_button.clicked.connect(self.load_action)
+        session_layout.addWidget(load_button)
+
+        self.tab_widget.addTab(session_widget, "Session")
+
+        # Open Patch Manager tab by default
+        self.patch_window = PatchWindow(self.patch_manager, self.fixture_library)
+        self.tab_widget.addTab(self.patch_window, "Patch Manager")
+        self.tab_widget.setCurrentWidget(self.patch_window)
 
     def slider_moved(self):
         slider = self.sender()
@@ -112,9 +123,7 @@ class DMXControl(QMainWindow):
             slider.setValue(self.dmx_frame[i])
 
     def open_patch_window(self):
-        if not self.patch_window:
-            self.patch_window = PatchWindow(self.patch_manager, self.fixture_library)
-            self.tab_widget.addTab(self.patch_window, "Patch Manager")
+        # Patch window is now always created and added as a tab
         self.tab_widget.setCurrentWidget(self.patch_window)
 
 def create_gui(patch_manager, fixture_library):
