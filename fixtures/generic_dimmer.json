@@ -1,0 +1,16 @@
+
+{
+    "manufacturer": "Generic",
+    "model": "Dimmer",
+    "modes": [
+        {
+            "name": "1-channel",
+            "channels": [
+                "dimmer"
+            ]
+        }
+    ],
+    "channels": {
+        "dimmer": {"name": "Dimmer", "type": "dimmer"}
+    }
+}

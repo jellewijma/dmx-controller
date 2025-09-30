@@ -1,17 +1,14 @@
 
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QHeaderView, QDialog
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QHeaderView, QDialog
 from src.add_fixture_dialog import AddFixtureDialog
 
-class PatchWindow(QMainWindow):
+class PatchWindow(QWidget):
     def __init__(self, patch_manager, fixture_library):
         super().__init__()
         self.patch_manager = patch_manager
         self.fixture_library = fixture_library
-        self.setWindowTitle("Patch Manager")
 
-        self.central_widget = QWidget()
-        self.setCentralWidget(self.central_widget)
-        self.layout = QVBoxLayout(self.central_widget)
+        self.layout = QVBoxLayout(self)
 
         self.table = QTableWidget()
         self.table.setColumnCount(5)

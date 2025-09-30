@@ -31,6 +31,7 @@ class AddFixtureDialog(QDialog):
         self.layout.addWidget(self.button_box)
 
         self.populate_manufacturers()
+        self.populate_models(self.manufacturer_combo.currentText()) # Initial population
         self.manufacturer_combo.currentTextChanged.connect(self.populate_models)
 
     def populate_manufacturers(self):

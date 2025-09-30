@@ -1,7 +1,8 @@
 
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QSlider, QVBoxLayout, QHBoxLayout, QLabel, QAction, QFileDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QSlider, QVBoxLayout, QHBoxLayout, QLabel, QAction, QFileDialog, QTabWidget
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPalette, QColor
 from src.dmx_output import send_dmx
 from src.show_file import save_show, load_show
 from src.patch_window import PatchWindow
@@ -35,10 +36,13 @@ class DMXControl(QMainWindow):
         manage_patch_action.triggered.connect(self.open_patch_window)
         patch_menu.addAction(manage_patch_action)
 
-        # Create main widget and layout
-        main_widget = QWidget()
-        self.setCentralWidget(main_widget)
-        main_layout = QHBoxLayout(main_widget)
+        # Create tab widget
+        self.tab_widget = QTabWidget()
+        self.setCentralWidget(self.tab_widget)
+
+        # Create DMX Control tab (sliders)
+        dmx_control_widget = QWidget()
+        dmx_control_layout = QHBoxLayout(dmx_control_widget)
         
         self.sliders = []
         
@@ -57,7 +61,9 @@ class DMXControl(QMainWindow):
             slider_layout.addWidget(label)
             slider_layout.addWidget(slider)
             
-            main_layout.addLayout(slider_layout)
+            dmx_control_layout.addLayout(slider_layout)
+        
+        self.tab_widget.addTab(dmx_control_widget, "DMX Control")
 
     def slider_moved(self):
         slider = self.sender()
@@ -90,7 +96,8 @@ class DMXControl(QMainWindow):
             self.patch_manager.clear_patch()
             for universe, fixtures_data in loaded_patched_fixtures_data.items():
                 for patch_info in fixtures_data:
-                    fixture = self.fixture_library.get_fixture(patch_info['manufacturer'], patch_info['model'])
+                    # Directly use the fixture object from patch_info
+                    fixture = patch_info['fixture']
                     if fixture:
                         self.patch_manager.add_fixture(fixture, int(universe), patch_info['address'])
 
@@ -107,11 +114,29 @@ class DMXControl(QMainWindow):
     def open_patch_window(self):
         if not self.patch_window:
             self.patch_window = PatchWindow(self.patch_manager, self.fixture_library)
-        self.patch_window.show()
+            self.tab_widget.addTab(self.patch_window, "Patch Manager")
+        self.tab_widget.setCurrentWidget(self.patch_window)
 
 def create_gui(patch_manager, fixture_library):
     app = QApplication(sys.argv)
+    app.setStyle('Fusion')
+
+    dark_palette = QPalette()
+    dark_palette.setColor(QPalette.Window, QColor(53, 53, 53))
+    dark_palette.setColor(QPalette.WindowText, QColor(255, 255, 255))
+    dark_palette.setColor(QPalette.Base, QColor(25, 25, 25))
+    dark_palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    dark_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 255))
+    dark_palette.setColor(QPalette.ToolTipText, QColor(255, 255, 255))
+    dark_palette.setColor(QPalette.Text, QColor(255, 255, 255))
+    dark_palette.setColor(QPalette.Button, QColor(53, 53, 53))
+    dark_palette.setColor(QPalette.ButtonText, QColor(255, 255, 255))
+    dark_palette.setColor(QPalette.BrightText, QColor(255, 0, 0))
+    dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
+    dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+    dark_palette.setColor(QPalette.HighlightedText, QColor(0, 0, 0))
+    app.setPalette(dark_palette)
+
     ex = DMXControl(patch_manager, fixture_library)
     ex.show()
     sys.exit(app.exec_())
-

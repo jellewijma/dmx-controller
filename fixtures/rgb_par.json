@@ -1,0 +1,18 @@
+
+{
+    "manufacturer": "Generic",
+    "model": "RGB Par",
+    "modes": [
+        {
+            "name": "3-channel",
+            "channels": [
+                "red", "green", "blue"
+            ]
+        }
+    ],
+    "channels": {
+        "red": {"name": "Red", "type": "color"},
+        "green": {"name": "Green", "type": "color"},
+        "blue": {"name": "Blue", "type": "color"}
+    }
+}
